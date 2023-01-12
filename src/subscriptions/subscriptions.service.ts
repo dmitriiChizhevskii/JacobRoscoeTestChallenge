@@ -1,5 +1,5 @@
 import { Logger, HttpException, BadRequestException, Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { HttpService } from '@nestjs/axios';
@@ -20,7 +20,7 @@ export class SubscriptionsService {
   async subscribe({ url }: newSubscription) {
     try {
       const sub = await this.prisma.subscription.create({ data: { url } });
-      return sub;
+      return { success: true };
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === 'P2002') {
@@ -40,12 +40,12 @@ export class SubscriptionsService {
       const res = this.httpService.post(s.url, data)
       .pipe(
         catchError(e => {
-          this.logger.log(`${new Date().toString()} ${s.url}: ${e.code}`);
+          this.logger.log(`${event} ${s.url}: ${e.code}`);
           return EMPTY;
         }),
       )
       .subscribe(value => {
-        this.logger.log(`${new Date().toString()} ${s.url}: successful notification`);
+        this.logger.log(`${event} ${s.url}: successful notification`);
       })
     });
   }

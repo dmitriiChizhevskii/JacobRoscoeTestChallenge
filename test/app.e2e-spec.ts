@@ -15,10 +15,11 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  it('/ (GET)', () => {
+  it('/todos (POST)', () => {
     return request(app.getHttpServer())
-      .get('/')
+      .post('/todos')
+      .send({ task: 'todo1' })
       .expect(200)
-      .expect('Hello World!');
+      .expect({"success":true});
   });
 });

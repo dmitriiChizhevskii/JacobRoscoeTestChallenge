@@ -1,6 +1,7 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { NotFoundException, BadRequestException, Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
+import { Prisma } from '@prisma/client';
 import { newTodo, updateTodo } from './dto';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { NotifyEvent } from '../common/notifyEvent'; 
@@ -22,10 +23,14 @@ export class TodosService {
 
     this.subscriptionsService.notify(NotifyEvent.todo_added, todo.body);
 
-    return todo;
+    return { success: true };
   }
 
   async update(id: number, { completed }: updateTodo) {
+    const t = await this.prisma.task.findUnique({ where: { id }});
+    if (t === null)  throw new NotFoundException(`The todo with id ${id} does not exist`);
+    if (t.completed === completed)  throw new BadRequestException(`The todo is already in the correct status`); 
+
     const todo = await this.prisma.task.update({
       where: {
         id
@@ -37,6 +42,6 @@ export class TodosService {
 
     if (completed === true) this.subscriptionsService.notify(NotifyEvent.todo_completed, todo.body);
 
-    return todo;
+    return { success: true };
   }
 }
